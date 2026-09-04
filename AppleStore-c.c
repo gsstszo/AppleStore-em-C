@@ -34,6 +34,12 @@ bool is_valid_position(int id) {
     return false;
   }
 }
+void clearInputBuffer() {
+  int c;
+  while ((c = getchar()) != '\n' && c != EOF);
+  // essa funcao aq e para nao ficar usando o getchar() toda hora
+  // principalmente quando for em um
+}
 
 void CreateProduct() {
   products[amount].id = next_id;
@@ -93,7 +99,6 @@ void CreateProduct() {
 }
 
 void ShowProduct(int position) {
-  printf("\n");
   printf("----------------------------\n");
   printf("Name: %s \n", products[position].name);
   printf("Code: %s \n", products[position].code);
@@ -106,10 +111,13 @@ void ShowProduct(int position) {
   printf("----------------------------\n");
 }
 void ListProduct() {
-  printf("--List of Registered Products--\n");
-  for (int i = 0; i < amount; i++) {
+  if (amount < 1) {
+    printf("No products listed.\n");
+  } else {
     printf("--List of Registered Products--\n");
-    ShowProduct(i);
+    for (int i = 0; i < amount; i++) {
+      ShowProduct(i);
+    }
   }
 }
 
@@ -134,9 +142,8 @@ int SearchProduct() {
 void UpdateProduct() {
   int position = SearchProduct();
   int option;
-  if (is_valid_position) {
+  if (is_valid_position(position)) {
     do {
-      system("cls");
       printf("What would you like to change? \n");
       printf(
           ""
@@ -152,47 +159,90 @@ void UpdateProduct() {
       scanf("%d", &option);
       switch (option) {
         case 1:
+          clearInputBuffer();
           do {
-            getchar();
             printf("Current name: %s \n", products[position].name);
             printf("Enter the new name: ");
             fgets(products[position].name, sizeof(products[position].name),
                   stdin);
             products[position].name[strcspn(products[position].name, "\n")] =
                 '\0';
-            printf("Name successfully changed! \n");
           } while (!is_valid_text(products[position].name));
+          printf("Name successfully changed! \n");
 
           break;
         case 2:
+          clearInputBuffer();
           do {
+            getchar();
             printf("Current code: %s \n", products[position].code);
             printf("Enter the new code: ");
             fgets(products[position].code, sizeof(products[position].code),
                   stdin);
             products[position].code[strcspn(products[position].code, "\n")] =
                 '\0';
-            printf("Code successfully changed! \n");
           } while (!is_valid_text(products[position].code));
+          printf("Code successfully changed! \n");
           break;
         case 3:
+          clearInputBuffer();
           do {
-            printf("Currente code : %s\n", products[position].color);
+            getchar();
+            printf("Current color : %s\n", products[position].color);
             printf("Enter the new color: ");
             fgets(products[position].color, sizeof(products[position].color),
                   stdin);
             products[position].color[strcspn(products[position].color, "\n")] =
                 '\0';
-            printf("Color successfully changed! \n");
-          } while (is_valid_text(products[position].color));
+          } while (!is_valid_text(products[position].color));
+          printf("Color successfully changed! \n");
           break;
         case 4:
+          clearInputBuffer();
+          do {
+            printf("Currente category: %s\n", products[position].category);
+            printf("Enter the new category:");
+            fgets(products[position].category,
+                  sizeof(products[position].category), stdin);
+            products[position]
+                .category[strcspn(products[position].category, "\n")] = '\0';
+          } while (!is_valid_text(products[position].category));
+          printf("Category successfully changed!\n");
           break;
         case 5:
+          clearInputBuffer();
+          do {
+            printf("Currente year: %d ", products[position].year);
+            scanf("%d", &products[position].year);
+            if (products[position].year < 1976 ||
+                products[position].year > 2027) {
+              printf("Invalid year! Enter a year between 1976 and 2027.\n");
+            }
+          } while (products[position].year < 1976 ||
+                   products[position].year > 2027);
+          printf("Year successfully changed!\n");
           break;
         case 6:
+          clearInputBuffer();
+          do {
+            printf("Enter the price: ");
+            scanf("%f", &products[position].price);
+            if (products[position].price <= 0) {
+              printf("Invalid price! Enter a value greater than 0.\n");
+            }
+          } while (products[position].price <= 0);
+          printf("Price successfully changed!\n");
           break;
         case 7:
+          clearInputBuffer();
+          do {
+            printf("Enter the quantity in stock: ");
+            scanf("%d", &products[position].stock);
+            if (products[position].stock < 0) {
+              printf("Invalid stock! Enter a positive value.\n");
+            }
+          } while (products[position].stock < 0);
+          printf("Quantity in stock sucessfully changed!\n");
           break;
         case 8:
           break;
@@ -204,12 +254,76 @@ void UpdateProduct() {
   } else {
     printf("Product not found!\n");
   }
-};
+}
+void DeleteProduct() {
+  int position = SearchProduct();
+  if (is_valid_position(position)) {
+    for (int i = position; i < amount - 1; i++) {
+      products[i] = products[i + 1];
+    }
+    printf("Product successfully deleted\n");
+    amount--;
+  };
+}
+void ManageInventory() {
+  int option;
+  int temporary_quantity_stock;
+  int position = SearchProduct();
+  bool temporary_verification = false;
+  printf(
+      ""
+      "1 - Add stock \n"
+      "2 - Remove stock \n"
+      "3 - View stock \n"
+      "4 - Back \n"
+      "Select an option:  ");
+  scanf("%d", &option);
+  switch (option) {
+    case 1:
+      printf("How many units do you want to add? ");
+      scanf("%d", &temporary_quantity_stock);
+      if (temporary_quantity_stock < 1) {
+        printf("Insufficient units!\n");
+      } else {
+        products[position].stock =
+            products[position].stock + temporary_quantity_stock;
+        printf("\n Stock unit successfully added.\n");
+      }
+      break;
+    case 2:
+      do {
+        printf("How many units do you want to remove? ");
+        scanf("%d", &temporary_quantity_stock);
+        if (temporary_quantity_stock < 1) {
+          printf("Insufficient units!\n");
+        } else if (temporary_quantity_stock > products[position].stock) {
+          printf("You cannot remove more units than you have in stock.\n");
+        } else {
+          products[position].stock =
+              products[position].stock - temporary_quantity_stock;
+          temporary_verification = true;
+          printf("\nStock unit withdrawal successfully completed.\n");
+        }
+      } while (!temporary_verification);
+      break;
+    case 3:
+      printf("--------------------------------------------------\n");
+      printf("Name: %s \n", products[position].name);
+      printf("Quantity in stock: %d\n", products[position].stock);
+      printf("--------------------------------------------------\n");
+      break;
+    case 4:
+      break;
+    default:
+      break;
+  }
+}
+ void SaveData(){
+  
+ }
 void MenuPrincipal() {
   int option;
   do {
-    system("cls");
-
     printf(
         "      APPLE STORE      \n"
         "\n"
@@ -243,10 +357,10 @@ void MenuPrincipal() {
         UpdateProduct();
         break;
       case 5:
-        printf("Funcao de RemoverProduto ainda nao implementada\n");
+        DeleteProduct();
         break;
       case 6:
-        printf("Funcao de GerenciarProduto ainda nao implementada\n");
+        ManageInventory();
         break;
       case 7:
         printf("Funcao de SalvarDados ainda nao implementada\n");
